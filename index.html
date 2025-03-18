@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhantomCraft – AI Social Engagement Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script defer src="script.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Fallback inline styles in case styles.css fails to load */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #f5f5f5;
+            color: #202124;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(to right, #1a73e8, #4285f4);
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+            padding: 24px 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #ffffff;
+        }
+        header .logo img {
+            margin-bottom: 12px;
+            width: 80px;
+            height: 80px;
+        }
+        header h1 {
+            font-size: 2.5em;
+            margin: 0;
+            font-weight: 500;
+        }
+        header .subtitle {
+            font-size: 1.2em;
+            margin-top: 4px;
+            color: #e8f0fe;
+        }
+        main {
+            padding: 24px;
+            max-width: 900px;
+            margin: 40px auto;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px;
+            margin: 24px 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            border-left: 4px solid #1a73e8;
+        }
+        h2 {
+            font-size: 2em;
+            margin-bottom: 16px;
+            font-weight: 500;
+            color: #202124;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #3c4043;
+        }
+        select, button {
+            width: 100%;
+            padding: 14px 16px;
+            margin-top: 12px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: background 0.3s ease, border 0.3s ease;
+            outline: none;
+        }
+        select {
+            background: #f8f9fa;
+            color: #202124;
+        }
+        button {
+            background: #1a73e8;
+            color: #ffffff;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background: #1669c1;
+        }
+        .payment-section {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            color: #202124;
+            padding: 24px;
+            border-top: 2px solid #e0e0e0;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            z-index: 1000;
+            animation: slideUp 0.4s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .payment-section form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        #card-element {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        #submit-payment-btn {
+            background: #34a853;
+            color: #ffffff;
+            font-size: 1em;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            border: none;
+            cursor: pointer;
+        }
+        .close-btn {
+            background: #d93025;
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        #share-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #share-container button {
+            background: #1a73e8;
+            color: #ffffff;
+            margin: 8px 4px;
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background 0.3s ease;
+            outline: none;
+        }
+        #share-container button:hover {
+            background: #1669c1;
+        }
+        #subscription p {
+            font-size: 1.1em;
+            margin: 16px 0;
+            color: #5f6368;
+            line-height: 1.5;
+        }
+        footer.policy {
+            background: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            color: #5f6368;
+            text-align: center;
+            padding: 16px 12px;
+            font-size: 0.9em;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <!-- Place your logo image in the "images" folder -->
+            <img src="images/phantomcraft-logo.png" alt="PhantomCraft Logo">
+        </div>
+        <h1>PhantomCraft</h1>
+        <p class="subtitle">Smart AI-Generated Comments for Social Engagement</p>
+    </header>
+
+    <main>
+        <section id="comment-section" class="card">
+            <h2>Generate Engaging Comments Instantly</h2>
+            <label for="platform">Choose your platform:</label>
+            <select id="platform">
+                <option value="x">X</option>
+                <option value="facebook">Facebook</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="instagram">Instagram</option>
+                <option value="tiktok">TikTok</option>
+                <option value="reddit">Reddit</option>
+                <option value="pinterest">Pinterest</option>
+            </select>
+
+            <label for="tone">Choose your vibe:</label>
+            <select id="tone">
+                <option value="funny">Funny</option>
+                <option value="professional">Professional</option>
+                <option value="sarcastic">Sarcastic</option>
+                <option value="friendly">Friendly</option>
+                <option value="excited">Excited</option>
+                <option value="inspirational">Inspirational</option>
+                <option value="melancholic">Melancholic</option>
+                <option value="optimistic">Optimistic</option>
+                <option value="pessimistic">Pessimistic</option>
+                <option value="motivational">Motivational</option>
+                <option value="romantic">Romantic</option>
+                <option value="witty">Witty</option>
+            </select>
+
+            <button id="generate-btn" style="display: block; margin: 12px auto;">Generate Comment</button>
+            <p id="generated-comment" class="comment-output" style="text-align: center;"></p>
+
+            <div id="share-container">
+                <button class="share-btn" onclick="shareComment('x')">Send to X</button>
+                <button class="share-btn" onclick="shareComment('facebook')">Send to Facebook</button>
+                <button class="share-btn" onclick="shareComment('linkedin')">Send to LinkedIn</button>
+                <button class="share-btn" onclick="shareComment('instagram')">Send to Instagram</button>
+                <button class="share-btn" onclick="shareComment('tiktok')">Send to TikTok</button>
+                <button class="share-btn" onclick="shareComment('reddit')">Send to Reddit</button>
+                <button class="share-btn" onclick="shareComment('pinterest')">Send to Pinterest</button>
+                <button class="share-btn" onclick="copyComment()">Copy Comment</button>
+                <button id="regenerate-btn" onclick="generateComment()">Regenerate Comment</button>
+            </div>
+        </section>
+
+        <section id="subscription" class="card">
+            <h2>Our Features</h2>
+            <div id="free-features">
+                <h3>Free Tier – Essential Features</h3>
+                <ul>
+                    <li>Basic comment generation</li>
+                    <li>Standard tone options</li>
+                    <li>Core platform access</li>
+                    <li>Community support</li>
+                </ul>
+                <p style="font-style: italic; color: #3c4043;">Enjoy all these features at no cost!</p>
+            </div>
+            <h3>Upgrade for More</h3>
+            <div class="subscription-tier" id="pro-features">
+                <h4>Pro Tier</h4>
+                <p>€8/month</p>
+                <ul>
+                    <li>Advanced tone options</li>
+                    <li>Customizable comment length</li>
+                    <li>Basic keyword targeting</li>
+                    <li>Priority support</li>
+                </ul>
+                <a href="https://buy.stripe.com/bIYaG70YAf3IgCIfZ0" target="_blank">
+                    <button style="background: #34a853;">Subscribe for €8/month</button>
+                </a>
+            </div>
+            <div class="subscription-tier" id="gold-features">
+                <h4>Gold Tier</h4>
+                <p>€13/month</p>
+                <ul>
+                    <li>All Pro features</li>
+                    <li>Full keyword and audience targeting</li>
+                    <li>Exclusive advanced tone options</li>
+                </ul>
+                <a href="https://buy.stripe.com/00geWn36IbRwaekaEH" target="_blank">
+                    <button style="background: #34a853;">Subscribe for €13/month</button>
+                </a>
+            </div>
+            <!-- Premium status message will be injected here -->
+            <div id="premium-status"></div>
+        </section>
+
+        <section id="feedback" class="card">
+            <h2>We Value Your Feedback</h2>
+            <p>Please share your thoughts to help us improve our service.</p>
+            <button id="feedback-btn" onclick="showFeedback()">Submit Feedback</button>
+        </section>
+
+        <section id="disclaimer" class="card" style="background: #fff8e1; border-left: 4px solid #ffab00;">
+            <p style="font-size: 0.9em;">Disclaimer: This app is currently in beta. Some features might not work as expected.</p>
+        </section>
+    </main>
+
+    <div id="payment-modal" class="payment-section">
+        <h2>Complete Your Subscription</h2>
+        <p id="payment-text"></p>
+        <div id="card-element">
+            <a id="payment-link" href="" target="_blank">
+                <button id="submit-payment-btn">Pay Now</button>
+            </a>
+        </div>
+        <button id="check-status-btn" onclick="checkPaymentStatus()">Check Payment Status</button>
+        <button class="close-btn" onclick="closePayment()">Cancel</button>
+    </div>
+
+    <div id="feedback-modal" class="feedback-section" style="display: none; text-align: center;">
+        <h2>Share Your Feedback</h2>
+        <textarea id="feedback-textarea" rows="4" placeholder="Enter your feedback here..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #dadce0;"></textarea>
+        <br>
+        <button id="submit-feedback-btn" onclick="sendFeedback()">Send Feedback</button>
+        <br>
+        <button class="close-btn" onclick="closeFeedback()">Close</button>
+    </div>
+
+    <footer class="policy">
+        <p>PixelForge Integrity Policy © 2025. Please be respectful and refrain from abusing our service. Any malicious behavior may result in account suspension.</p>
+    </footer>
+
+    <script>
+        // Global Variables (use secure keys in production)
+        const userId = "demo-user";
+        const jwtToken = "YOUR_JWT_TOKEN_HERE";
+        let isPaidUser = false;
+        const apiBase = "http://localhost:3000";
+
+        // Helper functions
+        function getAuthHeaders(withContentType = false) {
+            const headers = {
+                'Authorization': `Bearer ${jwtToken}`
+            };
+            if (withContentType) {
+                headers['Content-Type'] = 'application/json';
+            }
+            return headers;
+        }
+
+        function apiRequest(endpoint, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: getAuthHeaders(body ? true : false)
+            };
+            if(body) options.body = JSON.stringify(body);
+            return fetch(`${apiBase}${endpoint}`, options).then(res => res.json());
+        }
+
+        // DOM Listeners & Initialization
+        document.getElementById('generate-btn').addEventListener('click', generateComment);
+        document.addEventListener('DOMContentLoaded', () => {
+            generateComment();
+            fetchPaymentStatus();
+        });
+        document.getElementById('submit-feedback-btn').addEventListener('click', sendFeedback);
+
+        // Comment Generation Functions
+        function getVerbPhrase(tone) {
+            let baseVerbs;
+            switch(tone) {
+                case "funny": baseVerbs = ["cracks up", "juggles", "spins a laugh"]; break;
+                case "professional": baseVerbs = ["analyzes", "breaks down", "provides insights on"]; break;
+                case "sarcastic": baseVerbs = ["sneers at", "rolls its eyes at", "mockingly critiques"]; break;
+                case "friendly": baseVerbs = ["greets", "smiles at", "warmly embraces"]; break;
+                case "excited": baseVerbs = ["bursts out over", "buzzes about", "celebrates"]; break;
+                case "inspirational": baseVerbs = ["inspires", "motivates", "sparks passion for"]; break;
+                case "melancholic": baseVerbs = ["mourns", "reflects upon", "saddens over"]; break;
+                case "optimistic": baseVerbs = ["brightens", "promises hope to", "envisions"]; break;
+                case "pessimistic": baseVerbs = ["questions", "casts doubt on", "grimly views"]; break;
+                case "motivational": baseVerbs = ["drives", "propels", "encourages"]; break;
+                case "romantic": baseVerbs = ["whispers to", "caresses", "embraces"]; break;
+                case "witty": baseVerbs = ["winks at", "quipfully juggles", "playfully teases"]; break;
+                default: baseVerbs = ["comments on"];
+            }
+            const adverbs = ["remarkably", "unexpectedly", "simply", "notably", "incredibly"];
+            return (Math.random() > 0.5 ? adverbs[Math.floor(Math.random() * adverbs.length)] + " " : "") +
+                   baseVerbs[Math.floor(Math.random() * baseVerbs.length)];
+        }
+
+        function getTopic(platform) {
+            let seed;
+            if (platform === "x") {
+                seed = ["global headlines", "market trends", "tech breakthroughs", "viral controversies"];
+            } else if (platform === "facebook") {
+                seed = ["community events", "social initiatives", "local gatherings", "cultural shifts"];
+            } else if (platform === "linkedin") {
+                seed = ["industry insights", "economic forecasts", "business strategies", "professional milestones"];
+            } else {
+                seed = ["current events", "latest developments"];
+            }
+            return seed[Math.floor(Math.random() * seed.length)];
+        }
+
+        function generateRandomComment(tone, platform) {
+            const intros = ["Today", "Right now", "At this moment", "Currently"];
+            const intro = intros[Math.floor(Math.random() * intros.length)];
+            const platformName = platform.toUpperCase();
+            return `${intro}, ${platformName} ${getVerbPhrase(tone)} ${getTopic(platform)}.`;
+        }
+
+        function generateExtraPhrase() {
+            const extras = [
+                "Embrace life’s endless adventures.",
+                "Forge ahead with boundless curiosity.",
+                "Let your journey inspire every step.",
+                "Celebrate the beauty of unexpected moments.",
+                "Harness your dreams to shape a brighter future."
+            ];
+            return extras[Math.floor(Math.random() * extras.length)];
+        }
+
+        function generateComment() {
+            const platformSelect = document.getElementById('platform');
+            const toneSelect = document.getElementById('tone');
+            let platform = platformSelect.value;
+            let tone = toneSelect.value;
+            const commentOutput = document.getElementById('generated-comment');
+            if (platform === 'linkedin' && tone !== 'professional') {
+                tone = 'professional';
+                console.log("LinkedIn selected, forcing professional tone.");
+            }
+            let randomComment = generateRandomComment(tone, platform);
+            randomComment = randomComment.replace(/CommentCraft/gi, "PhantomCraft").trim();
+            let words = randomComment.split(/\s+/);
+            if (words.length < 12) {
+                randomComment += " " + generateExtraPhrase();
+            }
+            words = randomComment.split(/\s+/);
+            if (!isPaidUser && words.length > 30) {
+                randomComment = words.slice(0, 30).join(" ") + "...";
+            }
+            commentOutput.textContent = randomComment;
+            return randomComment;
+        }
+
+        function redirectTo(url) {
+            window.open(url, "_blank");
+        }
+
+        function shareComment(selectedPlatform) {
+            const currentComment = document.getElementById('generated-comment').textContent;
+            const currentUrl = window.location.href;
+            let url = "";
+            switch(selectedPlatform) {
+                case 'x':
+                    url = `https://x.com/intent/tweet?text=${encodeURIComponent(currentComment)}`;
+                    break;
+                case 'facebook':
+                    url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}&quote=${encodeURIComponent(currentComment)}`;
+                    break;
+                case 'linkedin':
+                    url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`;
+                    break;
+                case 'instagram':
+                    alert("Sharing to Instagram is not supported via web.");
+                    break;
+                case 'tiktok':
+                    alert("Sharing to TikTok is not supported via web.");
+                    break;
+                case 'reddit':
+                    url = `https://www.reddit.com/submit?url=${encodeURIComponent(currentUrl)}&title=${encodeURIComponent(currentComment)}`;
+                    break;
+                case 'pinterest':
+                    url = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(currentUrl)}&description=${encodeURIComponent(currentComment)}`;
+                    break;
+                default:
+                    url = "";
+            }
+            if(url) redirectTo(url);
+        }
+
+        function copyComment() {
+            const comment = document.getElementById('generated-comment').textContent;
+            navigator.clipboard.writeText(comment).then(() => {
+                alert("Comment copied to clipboard!");
+            }, () => {
+                alert("Failed to copy comment.");
+            });
+        }
+
+        // Payment & Feedback Functions
+        function showPayment(tier) {
+            document.getElementById('payment-modal').style.display = 'block';
+            const paymentText = document.getElementById('payment-text');
+            const paymentLink = document.getElementById('payment-link');
+            if (tier === 'pro') {
+                paymentText.textContent = "Pro Tier Subscription: €8/month";
+                paymentLink.href = "https://buy.stripe.com/bIYaG70YAf3IgCIfZ0";
+            } else if (tier === 'gold') {
+                paymentText.textContent = "Gold Tier Subscription: €13/month";
+                paymentLink.href = "https://buy.stripe.com/00geWn36IbRwaekaEH";
+            }
+        }
+
+        function closePayment() {
+            document.getElementById('payment-modal').style.display = 'none';
+        }
+
+        function showFeedback() {
+            document.getElementById('feedback-modal').style.display = 'block';
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedback-modal').style.display = 'none';
+        }
+
+        function sendFeedback() {
+            const feedback = document.getElementById('feedback-textarea').value;
+            if (feedback.trim() !== "") {
+                alert("Thank you for your feedback!");
+                document.getElementById('feedback-textarea').value = "";
+                closeFeedback();
+            } else {
+                alert("Please enter your feedback before sending.");
+            }
+        }
+
+        function checkPaymentStatus() {
+            apiRequest(`/payment-status/${userId}`, 'GET')
+            .then(data => {
+                if(data.paid) {
+                    isPaidUser = true;
+                    const modal = document.getElementById('payment-modal');
+                    modal.innerHTML = '<h2>Payment Verified!</h2><p>Premium features are now unlocked.</p><button class="close-btn" onclick="closePayment()">Close</button>';
+                } else {
+                    alert("Payment not yet verified. Please complete payment and try again.");
+                }
+            })
+            .catch(err => {
+                console.error("Error checking payment status:", err);
+                alert("Error checking payment status. Please try again later.");
+            });
+        }
+
+        function fetchPaymentStatus() {
+            console.log(`Fetching payment status for ${userId}...`);
+            apiRequest(`/payment-status/${userId}`, 'GET')
+            .then(data => {
+                console.log('Payment status fetched:', data);
+                isPaidUser = data.paid;
+                updatePremiumUI();
+            })
+            .catch(err => {
+                console.error("Error fetching payment status:", err);
+            });
+        }
+
+        function updatePremiumUI() {
+            const premiumContainer = document.getElementById('premium-status');
+            premiumContainer.innerHTML = "";
+            if(isPaidUser) {
+                console.log("User is paid. Unlocking premium features.");
+                premiumContainer.innerHTML = "<p style='color: green;'>Premium features unlocked! <button id='refund-payment-btn' onclick='refundPayment()'>Request Refund</button> <button id='cancel-subscription-btn' onclick='cancelSubscription()'>Cancel Subscription</button></p>";
+            } else {
+                console.log("User is not paid. Displaying upgrade prompt.");
+                premiumContainer.innerHTML = "<p style='color: red;'>Upgrade to unlock premium features.</p>";
+            }
+        }
+
+        function refundPayment() {
+            if (!confirm("Are you sure you want to request a refund?")) {
+                return;
+            }
+            apiRequest(`/refund-payment/${userId}`, 'POST', { userId: userId })
+            .then(data => {
+                if (data.refunded) {
+                    alert("Your refund has been processed.");
+                    isPaidUser = false;
+                    updatePremiumUI();
+                } else {
+                    alert("Refund unsuccessful. Please contact support.");
+                }
+            })
+            .catch(err => {
+                console.error("Error processing refund:", err);
+                alert("Error processing refund. Please try again later.");
+            });
+        }
+
+        function cancelSubscription() {
+            if (!confirm("Are you sure you want to cancel your subscription?")) {
+                return;
+            }
+            apiRequest(`/cancel-subscription/${userId}`, 'POST', { userId: userId })
+            .then(data => {
+                if (data.cancelled) {
+                    alert("Your subscription has been cancelled.");
+                    isPaidUser = false;
+                    updatePremiumUI();
+                } else {
+                    alert("Subscription cancellation unsuccessful. Please contact support.");
+                }
+            })
+            .catch(err => {
+                console.error("Error cancelling subscription:", err);
+                alert("Error cancelling subscription. Please try again later.");
+            });
+        }
+    </script>
+</body>
+</html>
