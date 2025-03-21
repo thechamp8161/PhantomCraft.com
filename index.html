@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhantomCraft – AI Social Engagement Generator</title>
+    <title>PhantomCraft</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://js.stripe.com/v3/"></script>
     <script defer src="script.js"></script>
@@ -180,6 +180,13 @@
             font-size: 0.9em;
             margin-top: 40px;
         }
+        pre {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
@@ -276,7 +283,7 @@
                     <button style="background: #34a853;">Subscribe for €3/month</button>
                 </a>
             </div>
-            <!-- Premium status message will be injected here -->
+            <!-- Premium status message -->
             <div id="premium-status"></div>
         </section>
 
@@ -288,6 +295,99 @@
 
         <section id="disclaimer" class="card" style="background: #fff8e1; border-left: 4px solid #ffab00;">
             <p style="font-size: 0.9em;">Disclaimer: This app is currently in beta. Some features might not work as expected.</p>
+        </section>
+
+        <!-- Stripe Checkout Endpoint -->
+        <section class="card">
+            <h2>Stripe Checkout Session (Subscription)</h2>
+            <p>This Python/Flask snippet creates a Stripe Checkout session for a new subscription. You can call this endpoint (for example, with different Price IDs for Pro or Gold) to redirect the user to Stripe’s hosted checkout page.</p>
+            <pre><code class="python">
+import stripe
+from flask import Flask, redirect, request
+
+app = Flask(__name__)
+
+# Set your actual Stripe secret key
+stripe.api_key = "sk_test_your_actual_secret_key"  # REPLACE with your Stripe secret key
+
+# For example, use different Price IDs for Pro and Gold subscriptions.
+# Replace these with your actual Price IDs from the Stripe Dashboard.
+PRO_PRICE_ID = "price_pro_subscription"      # e.g. for €2/month Pro
+GOLD_PRICE_ID = "price_gold_subscription"    # e.g. for €3/month Gold
+
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    # Determine the tier from the request (default to Pro)
+    tier = request.args.get("tier", "pro").lower()
+    if tier == "gold":
+        price_id = GOLD_PRICE_ID;
+        success_url = "https://yourapp.com/success_gold"  # REPLACE with your Gold success URL
+    else:
+        price_id = PRO_PRICE_ID;
+        success_url = "https://yourapp.com/success"         # REPLACE with your Pro success URL
+
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            mode="subscription",
+            line_items=[{
+                "price": price_id,
+                "quantity": 1,
+            }],
+            success_url=success_url,
+            cancel_url="https://yourapp.com/cancel",   # REPLACE with your cancel URL
+        )
+        # Redirect user to the Stripe Checkout session URL
+        return redirect(session.url, code=303)
+    except Exception as e:
+        return str(e)
+
+if __name__ == '__main__':
+    app.run(port=3000, debug=True)
+            </code></pre>
+            <p>Call this endpoint with <code>?tier=pro</code> for Pro or <code>?tier=gold</code> for Gold subscriptions.</p>
+        </section>
+
+        <!-- Stripe Subscription Modification: Cancel at Period End -->
+        <section class="card">
+            <h2>Modify Subscription: Cancel at Period End</h2>
+            <p>This snippet modifies an active subscription so that it cancels at the end of the current period.</p>
+            <pre><code class="python">
+import stripe
+
+stripe.api_key = "sk_test_your_actual_secret_key"  # REPLACE with your secret key
+
+# Replace with the actual Subscription ID you wish to modify:
+subscription_id = "sub_your_actual_subscription_id"
+
+# Modify the subscription to cancel at period end
+stripe.Subscription.modify(subscription_id, cancel_at_period_end=True)
+
+print("Subscription will cancel at period end.")
+            </code></pre>
+        </section>
+
+        <!-- Stripe Subscription Modification: Update Price -->
+        <section class="card">
+            <h2>Modify Subscription: Update Price</h2>
+            <p>This snippet updates an existing subscription's items with a new Price ID.</p>
+            <pre><code class="python">
+import stripe
+
+stripe.api_key = "sk_test_your_actual_secret_key"  # REPLACE with your secret key
+
+# Replace with your actual Subscription ID and new Price ID
+subscription_id = "sub_your_actual_subscription_id"
+new_price_id = "price_your_new_price_id"  # REPLACE with the new Price ID
+
+# Update the subscription's items with the new Price ID
+stripe.Subscription.modify(
+    subscription_id,
+    items=[{"price": new_price_id}]
+)
+
+print("Subscription updated with new price.")
+            </code></pre>
         </section>
     </main>
 
@@ -315,286 +415,5 @@
     <footer class="policy">
         <p>PixelForge Integrity Policy © 2025. Please be respectful and refrain from abusing our service. Any malicious behavior may result in account suspension.</p>
     </footer>
-
-    <script>
-        // Global Variables (use secure keys in production)
-        const userId = "demo-user";
-        const jwtToken = "YOUR_JWT_TOKEN_HERE";
-        let isPaidUser = false;
-        const apiBase = "http://localhost:3000";
-
-        // Helper functions
-        function getAuthHeaders(withContentType = false) {
-            const headers = {
-                'Authorization': `Bearer ${jwtToken}`
-            };
-            if (withContentType) {
-                headers['Content-Type'] = 'application/json';
-            }
-            return headers;
-        }
-
-        function apiRequest(endpoint, method = 'GET', body = null) {
-            const options = {
-                method,
-                headers: getAuthHeaders(body ? true : false)
-            };
-            if(body) options.body = JSON.stringify(body);
-            return fetch(`${apiBase}${endpoint}`, options).then(res => res.json());
-        }
-
-        // DOM Listeners & Initialization
-        document.getElementById('generate-btn').addEventListener('click', generateComment);
-        document.addEventListener('DOMContentLoaded', () => {
-            generateComment();
-            fetchPaymentStatus();
-        });
-        document.getElementById('submit-feedback-btn').addEventListener('click', sendFeedback);
-
-        // Comment Generation Functions
-        function getVerbPhrase(tone) {
-            let baseVerbs;
-            switch(tone) {
-                case "funny": baseVerbs = ["cracks up", "juggles", "spins a laugh"]; break;
-                case "professional": baseVerbs = ["analyzes", "breaks down", "provides insights on"]; break;
-                case "sarcastic": baseVerbs = ["sneers at", "rolls its eyes at", "mockingly critiques"]; break;
-                case "friendly": baseVerbs = ["greets", "smiles at", "warmly embraces"]; break;
-                case "excited": baseVerbs = ["bursts out over", "buzzes about", "celebrates"]; break;
-                case "inspirational": baseVerbs = ["inspires", "motivates", "sparks passion for"]; break;
-                case "melancholic": baseVerbs = ["mourns", "reflects upon", "saddens over"]; break;
-                case "optimistic": baseVerbs = ["brightens", "promises hope to", "envisions"]; break;
-                case "pessimistic": baseVerbs = ["questions", "casts doubt on", "grimly views"]; break;
-                case "motivational": baseVerbs = ["drives", "propels", "encourages"]; break;
-                case "romantic": baseVerbs = ["whispers to", "caresses", "embraces"]; break;
-                case "witty": baseVerbs = ["winks at", "quipfully juggles", "playfully teases"]; break;
-                default: baseVerbs = ["comments on"];
-            }
-            const adverbs = ["remarkably", "unexpectedly", "simply", "notably", "incredibly"];
-            return (Math.random() > 0.5 ? adverbs[Math.floor(Math.random() * adverbs.length)] + " " : "") +
-                   baseVerbs[Math.floor(Math.random() * baseVerbs.length)];
-        }
-
-        function getTopic(platform) {
-            let seed;
-            if (platform === "x") {
-                seed = ["global headlines", "market trends", "tech breakthroughs", "viral controversies"];
-            } else if (platform === "facebook") {
-                seed = ["community events", "social initiatives", "local gatherings", "cultural shifts"];
-            } else if (platform === "linkedin") {
-                seed = ["industry insights", "economic forecasts", "business strategies", "professional milestones"];
-            } else {
-                seed = ["current events", "latest developments"];
-            }
-            return seed[Math.floor(Math.random() * seed.length)];
-        }
-
-        function generateRandomComment(tone, platform) {
-            const intros = ["Today", "Right now", "At this moment", "Currently"];
-            const intro = intros[Math.floor(Math.random() * intros.length)];
-            const platformName = platform.toUpperCase();
-            return `${intro}, ${platformName} ${getVerbPhrase(tone)} ${getTopic(platform)}.`;
-        }
-
-        function generateExtraPhrase() {
-            const extras = [
-                "Embrace life’s endless adventures.",
-                "Forge ahead with boundless curiosity.",
-                "Let your journey inspire every step.",
-                "Celebrate the beauty of unexpected moments.",
-                "Harness your dreams to shape a brighter future."
-            ];
-            return extras[Math.floor(Math.random() * extras.length)];
-        }
-
-        function generateComment() {
-            const platformSelect = document.getElementById('platform');
-            const toneSelect = document.getElementById('tone');
-            let platform = platformSelect.value;
-            let tone = toneSelect.value;
-            const commentOutput = document.getElementById('generated-comment');
-            if (platform === 'linkedin' && tone !== 'professional') {
-                tone = 'professional';
-                console.log("LinkedIn selected, forcing professional tone.");
-            }
-            let randomComment = generateRandomComment(tone, platform);
-            randomComment = randomComment.replace(/CommentCraft/gi, "PhantomCraft").trim();
-            let words = randomComment.split(/\s+/);
-            if (words.length < 12) {
-                randomComment += " " + generateExtraPhrase();
-            }
-            words = randomComment.split(/\s+/);
-            if (!isPaidUser && words.length > 30) {
-                randomComment = words.slice(0, 30).join(" ") + "...";
-            }
-            commentOutput.textContent = randomComment;
-            return randomComment;
-        }
-
-        function redirectTo(url) {
-            window.open(url, "_blank");
-        }
-
-        function shareComment(selectedPlatform) {
-            const currentComment = document.getElementById('generated-comment').textContent;
-            const currentUrl = window.location.href;
-            let url = "";
-            switch(selectedPlatform) {
-                case 'x':
-                    url = `https://x.com/intent/tweet?text=${encodeURIComponent(currentComment)}`;
-                    break;
-                case 'facebook':
-                    url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}&quote=${encodeURIComponent(currentComment)}`;
-                    break;
-                case 'linkedin':
-                    url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`;
-                    break;
-                case 'instagram':
-                    alert("Sharing to Instagram is not supported via web.");
-                    break;
-                case 'tiktok':
-                    alert("Sharing to TikTok is not supported via web.");
-                    break;
-                case 'reddit':
-                    url = `https://www.reddit.com/submit?url=${encodeURIComponent(currentUrl)}&title=${encodeURIComponent(currentComment)}`;
-                    break;
-                case 'pinterest':
-                    url = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(currentUrl)}&description=${encodeURIComponent(currentComment)}`;
-                    break;
-                default:
-                    url = "";
-            }
-            if(url) redirectTo(url);
-        }
-
-        function copyComment() {
-            const comment = document.getElementById('generated-comment').textContent;
-            navigator.clipboard.writeText(comment).then(() => {
-                alert("Comment copied to clipboard!");
-            }, () => {
-                alert("Failed to copy comment.");
-            });
-        }
-
-        // Payment & Feedback Functions
-        function showPayment(tier) {
-            document.getElementById('payment-modal').style.display = 'block';
-            const paymentText = document.getElementById('payment-text');
-            const paymentLink = document.getElementById('payment-link');
-            if (tier === 'pro') {
-                paymentText.textContent = "Pro Tier Subscription: €2/month";
-                // The following curl command is provided for server-side integration.
-                // Here we simply update the link to the subscription schedule endpoint.
-                paymentLink.href = "https://api.stripe.com/v1/subscription_schedules/sub_sched_1R590RP10WciJpfHFh13aYVd";
-            } else if (tier === 'gold') {
-                paymentText.textContent = "Gold Tier Subscription: €3/month";
-                paymentLink.href = "https://api.stripe.com/v1/subscription_schedules/sub_sched_1R593MP10WciJpfHm6oewN6C";
-            }
-        }
-
-        function closePayment() {
-            document.getElementById('payment-modal').style.display = 'none';
-        }
-
-        function showFeedback() {
-            document.getElementById('feedback-modal').style.display = 'block';
-        }
-
-        function closeFeedback() {
-            document.getElementById('feedback-modal').style.display = 'none';
-        }
-
-        function sendFeedback() {
-            const feedback = document.getElementById('feedback-textarea').value;
-            if (feedback.trim() !== "") {
-                alert("Thank you for your feedback!");
-                document.getElementById('feedback-textarea').value = "";
-                closeFeedback();
-            } else {
-                alert("Please enter your feedback before sending.");
-            }
-        }
-
-        function checkPaymentStatus() {
-            apiRequest(`/payment-status/${userId}`, 'GET')
-            .then(data => {
-                if(data.paid) {
-                    isPaidUser = true;
-                    const modal = document.getElementById('payment-modal');
-                    modal.innerHTML = '<h2>Payment Verified!</h2><p>Premium features are now unlocked.</p><button class="close-btn" onclick="closePayment()">Close</button>';
-                } else {
-                    alert("Payment not yet verified. Please complete payment and try again.");
-                }
-            })
-            .catch(err => {
-                console.error("Error checking payment status:", err);
-                alert("Error checking payment status. Please try again later.");
-            });
-        }
-
-        function fetchPaymentStatus() {
-            console.log(`Fetching payment status for ${userId}...`);
-            apiRequest(`/payment-status/${userId}`, 'GET')
-            .then(data => {
-                console.log('Payment status fetched:', data);
-                isPaidUser = data.paid;
-                updatePremiumUI();
-            })
-            .catch(err => {
-                console.error("Error fetching payment status:", err);
-            });
-        }
-
-        function updatePremiumUI() {
-            const premiumContainer = document.getElementById('premium-status');
-            premiumContainer.innerHTML = "";
-            if(isPaidUser) {
-                console.log("User is paid. Unlocking premium features.");
-                premiumContainer.innerHTML = "<p style='color: green;'>Premium features unlocked! <button id='refund-payment-btn' onclick='refundPayment()'>Request Refund</button> <button id='cancel-subscription-btn' onclick='cancelSubscription()'>Cancel Subscription</button></p>";
-            } else {
-                console.log("User is not paid. Displaying upgrade prompt.");
-                premiumContainer.innerHTML = "<p style='color: red;'>Upgrade to unlock premium features.</p>";
-            }
-        }
-
-        function refundPayment() {
-            if (!confirm("Are you sure you want to request a refund?")) {
-                return;
-            }
-            apiRequest(`/refund-payment/${userId}`, 'POST', { userId: userId })
-            .then(data => {
-                if (data.refunded) {
-                    alert("Your refund has been processed.");
-                    isPaidUser = false;
-                    updatePremiumUI();
-                } else {
-                    alert("Refund unsuccessful. Please contact support.");
-                }
-            })
-            .catch(err => {
-                console.error("Error processing refund:", err);
-                alert("Error processing refund. Please try again later.");
-            });
-        }
-
-        function cancelSubscription() {
-            if (!confirm("Are you sure you want to cancel your subscription?")) {
-                return;
-            }
-            apiRequest(`/cancel-subscription/${userId}`, 'POST', { userId: userId })
-            .then(data => {
-                if (data.cancelled) {
-                    alert("Your subscription has been cancelled.");
-                    isPaidUser = false;
-                    updatePremiumUI();
-                } else {
-                    alert("Subscription cancellation unsuccessful. Please contact support.");
-                }
-            })
-            .catch(err => {
-                console.error("Error cancelling subscription:", err);
-                alert("Error cancelling subscription. Please try again later.");
-            });
-        }
-    </script>
 </body>
 </html>
