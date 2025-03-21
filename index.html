@@ -260,7 +260,7 @@
                     <li>Basic keyword targeting</li>
                     <li>Priority support</li>
                 </ul>
-                <a href="https://buy.stripe.com/YOUR_NEW_PRO_LINK" target="_blank">
+                <a href="https://api.stripe.com/v1/subscription_schedules/sub_sched_1R590RP10WciJpfHFh13aYVd" target="_blank">
                     <button style="background: #34a853;">Subscribe for €2/month</button>
                 </a>
             </div>
@@ -272,7 +272,7 @@
                     <li>Full keyword and audience targeting</li>
                     <li>Exclusive advanced tone options</li>
                 </ul>
-                <a href="https://buy.stripe.com/sub_sched_1R57xiP10WciJpfHYMrRureV" target="_blank">
+                <a href="https://api.stripe.com/v1/subscription_schedules/sub_sched_1R593MP10WciJpfHm6oewN6C" target="_blank">
                     <button style="background: #34a853;">Subscribe for €3/month</button>
                 </a>
             </div>
@@ -481,11 +481,13 @@
             const paymentText = document.getElementById('payment-text');
             const paymentLink = document.getElementById('payment-link');
             if (tier === 'pro') {
-                paymentText.textContent = "Pro Tier Subscription: €8/month";
-                paymentLink.href = "https://buy.stripe.com/bIYaG70YAf3IgCIfZ0";
+                paymentText.textContent = "Pro Tier Subscription: €2/month";
+                // The following curl command is provided for server-side integration.
+                // Here we simply update the link to the subscription schedule endpoint.
+                paymentLink.href = "https://api.stripe.com/v1/subscription_schedules/sub_sched_1R590RP10WciJpfHFh13aYVd";
             } else if (tier === 'gold') {
-                paymentText.textContent = "Gold Tier Subscription: €13/month";
-                paymentLink.href = "https://buy.stripe.com/00geWn36IbRwaekaEH";
+                paymentText.textContent = "Gold Tier Subscription: €3/month";
+                paymentLink.href = "https://api.stripe.com/v1/subscription_schedules/sub_sched_1R593MP10WciJpfHm6oewN6C";
             }
         }
 
