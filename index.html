@@ -260,27 +260,27 @@
             <h3>Upgrade for More</h3>
             <div class="subscription-tier" id="pro-features">
                 <h4>Pro Tier</h4>
-                <p>€2/month</p>
+                <p>2€</p>
                 <ul>
                     <li>Advanced tone options</li>
                     <li>Customizable comment length</li>
                     <li>Basic keyword targeting</li>
                     <li>Priority support</li>
                 </ul>
-                <a href="https://api.stripe.com/v1/subscription_schedules/sub_sched_1R590RP10WciJpfHFh13aYVd" target="_blank">
-                    <button style="background: #34a853;">Subscribe for €2/month</button>
+                <a href="https://buy.stripe.com/aEUbKbgXydZE86c3ch" target="_blank">
+                    <button style="background: #34a853;">Subscribe for 2€</button>
                 </a>
             </div>
             <div class="subscription-tier" id="gold-features">
                 <h4>Gold Tier</h4>
-                <p>€3/month</p>
+                <p>3€</p>
                 <ul>
                     <li>All Pro features</li>
                     <li>Full keyword and audience targeting</li>
                     <li>Exclusive advanced tone options</li>
                 </ul>
-                <a href="https://api.stripe.com/v1/subscription_schedules/sub_sched_1R593MP10WciJpfHm6oewN6C" target="_blank">
-                    <button style="background: #34a853;">Subscribe for €3/month</button>
+                <a href="https://buy.stripe.com/9AQ29B0YA3l0euAbIO" target="_blank">
+                    <button style="background: #34a853;">Subscribe for 3€</button>
                 </a>
             </div>
             <!-- Premium status message -->
@@ -295,99 +295,6 @@
 
         <section id="disclaimer" class="card" style="background: #fff8e1; border-left: 4px solid #ffab00;">
             <p style="font-size: 0.9em;">Disclaimer: This app is currently in beta. Some features might not work as expected.</p>
-        </section>
-
-        <!-- Stripe Checkout Endpoint -->
-        <section class="card">
-            <h2>Stripe Checkout Session (Subscription)</h2>
-            <p>This Python/Flask snippet creates a Stripe Checkout session for a new subscription. You can call this endpoint (for example, with different Price IDs for Pro or Gold) to redirect the user to Stripe’s hosted checkout page.</p>
-            <pre><code class="python">
-import stripe
-from flask import Flask, redirect, request
-
-app = Flask(__name__)
-
-# Set your actual Stripe secret key
-stripe.api_key = "sk_test_your_actual_secret_key"  # REPLACE with your Stripe secret key
-
-# For example, use different Price IDs for Pro and Gold subscriptions.
-# Replace these with your actual Price IDs from the Stripe Dashboard.
-PRO_PRICE_ID = "price_pro_subscription"      # e.g. for €2/month Pro
-GOLD_PRICE_ID = "price_gold_subscription"    # e.g. for €3/month Gold
-
-@app.route('/create-checkout-session', methods=['POST'])
-def create_checkout_session():
-    # Determine the tier from the request (default to Pro)
-    tier = request.args.get("tier", "pro").lower()
-    if tier == "gold":
-        price_id = GOLD_PRICE_ID;
-        success_url = "https://yourapp.com/success_gold"  # REPLACE with your Gold success URL
-    else:
-        price_id = PRO_PRICE_ID;
-        success_url = "https://yourapp.com/success"         # REPLACE with your Pro success URL
-
-    try:
-        session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            mode="subscription",
-            line_items=[{
-                "price": price_id,
-                "quantity": 1,
-            }],
-            success_url=success_url,
-            cancel_url="https://yourapp.com/cancel",   # REPLACE with your cancel URL
-        )
-        # Redirect user to the Stripe Checkout session URL
-        return redirect(session.url, code=303)
-    except Exception as e:
-        return str(e)
-
-if __name__ == '__main__':
-    app.run(port=3000, debug=True)
-            </code></pre>
-            <p>Call this endpoint with <code>?tier=pro</code> for Pro or <code>?tier=gold</code> for Gold subscriptions.</p>
-        </section>
-
-        <!-- Stripe Subscription Modification: Cancel at Period End -->
-        <section class="card">
-            <h2>Modify Subscription: Cancel at Period End</h2>
-            <p>This snippet modifies an active subscription so that it cancels at the end of the current period.</p>
-            <pre><code class="python">
-import stripe
-
-stripe.api_key = "sk_test_your_actual_secret_key"  # REPLACE with your secret key
-
-# Replace with the actual Subscription ID you wish to modify:
-subscription_id = "sub_your_actual_subscription_id"
-
-# Modify the subscription to cancel at period end
-stripe.Subscription.modify(subscription_id, cancel_at_period_end=True)
-
-print("Subscription will cancel at period end.")
-            </code></pre>
-        </section>
-
-        <!-- Stripe Subscription Modification: Update Price -->
-        <section class="card">
-            <h2>Modify Subscription: Update Price</h2>
-            <p>This snippet updates an existing subscription's items with a new Price ID.</p>
-            <pre><code class="python">
-import stripe
-
-stripe.api_key = "sk_test_your_actual_secret_key"  # REPLACE with your secret key
-
-# Replace with your actual Subscription ID and new Price ID
-subscription_id = "sub_your_actual_subscription_id"
-new_price_id = "price_your_new_price_id"  # REPLACE with the new Price ID
-
-# Update the subscription's items with the new Price ID
-stripe.Subscription.modify(
-    subscription_id,
-    items=[{"price": new_price_id}]
-)
-
-print("Subscription updated with new price.")
-            </code></pre>
         </section>
     </main>
 
